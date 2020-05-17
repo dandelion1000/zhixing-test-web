@@ -1,0 +1,26 @@
+// .icon {
+//   display: inline-block;
+//   vertical-align: middle;
+//   position: relative;
+//   bottom: 3px;
+// }
+
+.comfn(@w, @h , @url) {
+  width: @w;
+  height: @h;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-image: @url;
+  background-size: @w @h;
+}
+
+.header-bg-image {
+  .comfn(375px, 188px, url("../assets/images/welcome@2x.png"))
+}
+
+.progress-bg-image {
+  .comfn(262px, 51px, url("../assets/images/progress@2x.png"))
+}
+
+
+
