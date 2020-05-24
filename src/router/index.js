@@ -5,16 +5,25 @@ Vue.use(Router);
 import HomeIndex from '@/views/index.vue';
 import Login from '@/views/login/index.vue';
 import SealCar from '@/views/car/seal.vue';
+import VipCard from '@/views/user/vipcard.vue';
 import carDetail from '@/views/car/detail.vue';
 const router = new Router({
-    mode: 'history',
+    // mode: 'history',
     routes: [
         {
-            path: '/',
+            path: '/home',
             name: 'home',
             component: HomeIndex,
             meta: {
-                title: ''
+                title: '汽车列表'
+            },
+        },
+        {
+            path: '/vipcard',
+            name: 'vipcard',
+            component: VipCard,
+            meta: {
+                title: '会员卡'
             },
         },
         {
@@ -22,18 +31,18 @@ const router = new Router({
             name: 'seal',
             component: SealCar,
             meta: {
-                title: ''
+                title: '卖车'
             },
         }, {
             path: '/carDetail/:id',
             name: 'carDetail',
             component: carDetail,
             meta: {
-                title: ''
+                title: '汽车详情'
             },
         },
         {
-            path: '/login',
+            path: '/',
             name: 'login',
             component: Login,
             meta: {
@@ -78,6 +87,12 @@ function generateRoutesFromMenu(menu = [], routes = []) {
 
 router.beforeEach((to, from, next) => {
     next();
+    const appid = 'wx1683897a0af2da49';
+    const redirect_uri = 'http%3A%2F%2Fwww.cheshouyun.com';
+    // if (local) {
+
+    // }
+    // location.href(`https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appid}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_base#wechat_redirect`);
     if (to.meta.title) {
         document.title = to.meta.title;
     }

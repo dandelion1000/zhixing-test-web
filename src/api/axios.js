@@ -32,21 +32,20 @@ export function get(url, data) {
 }
 
 function dealApi(res) {
-    let data = res.data;
-    console.log('res', res);
-    if (data.status === CODE_MAP.SUCCESS) {
-        return data.data;
-    } else if (data.status === CODE_MAP.UNLOGIN) {
+    console.log('resde', res);
+    if (res.status === CODE_MAP.SUCCESS) {
+        return res.data;
+    } else if (res.status === CODE_MAP.UNLOGIN) {
     //未登录状态处理
     }
     // Message.error(data.msg);
-    throw new Error(data.msg);
+    // throw new Error(res.msg);
 }
 
 function serverError(res) {
-    let msg = res.message;
+    console.log(res);
     // Message.error('服务器异常，状态码：'+msg);
-    throw new Error('服务器异常，状态码：'+msg);
+    throw new Error('服务器异常，状态码：'+res.msg);
 }
 
 

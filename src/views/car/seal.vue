@@ -33,7 +33,7 @@
                 <div class="img-upload-title">
                     上传图片(最多可以上传3张)
                 </div>
-                <van-uploader v-model="fileList" multiple :max-count="3" />
+                <van-uploader v-model="fileList" :after-read="afterRead"  multiple :max-count="3" />
             </div>
             <div style="margin: 16px;">
                 <van-button
@@ -78,6 +78,8 @@ import {
     Button,
     Uploader
 } from 'vant';
+import Api from '@/api/index';
+
 import Header from '../layout/header.vue';
 import BrandPopup from './brand.vue';
 import CityPopup from './area-popup.vue';
@@ -120,6 +122,12 @@ export default {
         this.creatTimeList();
     },
     methods: {
+        afterRead(res){
+            Api.uploadFile(res.file).then((res) => {
+                console.log(res);
+            });
+        },
+
         creatTimeList(){
             let array = [];
             for(let i=20;i>=0;i--){
@@ -133,6 +141,11 @@ export default {
             this.formItem.licensingDate = time;
         },
         onSubmit(){
+            let params = this.formItem;
+            console.log(params);
+            Api.saveReleaseCar(params).then((res) => {
+                console.log('res', res);
+            });
         },
         popTime(){
             this.show = true;

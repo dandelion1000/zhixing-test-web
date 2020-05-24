@@ -94,11 +94,11 @@ export default {
         },
         okSelect(index, name){
             this.childActive = index;
-            this.curFirstSelct = this.curFirstSelct+' - '+name;
+            this.curFirstSelct = this.curFirstSelct+' '+name;
             this.subShow = false;
             this.show = false;
             this.$emit('input', this.curFirstSelct);
-            this.$emit('on-change', this.curFirstSelct);
+            this.$emit('on-change', name);
         }
     },
 };

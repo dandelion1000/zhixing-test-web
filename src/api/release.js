@@ -13,9 +13,10 @@ export default {
         return post('/api/account/update/avatar', parmas);
     },
     uploadFile(file) {
+        alert('file', file);
         let form = new FormData();
         form.append('file', file);
-        return post('/api/universal/upload', form, {
+        return post('/uploadimg', form, {
             transformRequest: [function (data) {
                 return data;
             }],

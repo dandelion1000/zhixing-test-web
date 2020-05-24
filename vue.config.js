@@ -10,8 +10,6 @@ const resolve = dir => {
 const isProduction = process.env.NODE_ENV === 'production';
 
 module.exports = {
-    publicPath: process.env.NODE_ENV === 'production' ? '/zhixing/' : '/',
-    lintOnSave: process.env.NODE_ENV !== 'production',
     chainWebpack: config => {
         config.resolve.alias
             .set('@', resolve('src'))
@@ -49,13 +47,13 @@ module.exports = {
         }
     },
     devServer: {
-        port: 8888, // 端口号
+        port: 8989, // 端口号
         https: false, // https:{type:Boolean}
-        open: true, // 配置自动启动浏览器
-        hotOnly: true, // 热更新
+        // open: true, // 配置自动启动浏览器
+        // hotOnly: true, // 热更新
         proxy: {
-            '/api': {
-                target: 'http://utime.36dian.top',
+            '/': {
+                target: 'http://chouqin-123.vicp.net',
                 ws: true,
                 changeOrigin: true,
                 secure: false

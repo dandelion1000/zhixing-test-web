@@ -3,7 +3,7 @@
         <van-sticky>
             <van-dropdown-menu active-color="#f2826a">
                 <van-dropdown-item
-                    v-model="query.sorts"
+                    v-model="query.sort"
                     :options="option1"
                     @change="sortChange"
                 />
@@ -65,7 +65,7 @@
                 </van-dropdown-item>
             </van-dropdown-menu>
         </van-sticky>
-        <car-list></car-list>
+        <car-list ref="carlist"></car-list>
         <brand-popup ref="brand" @on-change="brandChange"></brand-popup>
         <area-popup ref="area" @on-change="areaChange"></area-popup>
     </div>
@@ -116,28 +116,22 @@ export default {
     data() {
         return {
             query: {
-                sorts: '0',
-                brandSeries: '',
-                price: '',
-                city: ''
+                sort: null,
+                brandseries: null,
+                price: null,
+                city: null
             },
             brandlist: BrandList,
             indexList: ['A', 'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'W', 'X', 'Y', 'Z'],
             areaList: areaList,
-            value2: 0,
+            value2: null,
             value3: '100',
             value4: 'all',
             show: false,
             curActive: '0',
             option1: [
-                { text: '默认排序', value: '0' },
-                { text: '性价比高', value: '1' },
-                { text: '最新发布', value: '2' },
-                { text: '价格最低', value: '3' },
-                { text: '价格最高', value: '4' },
-                { text: '里程最短', value: '5' },
-                { text: '车龄最短', value: '6' },
-                { text: '最新发布', value: '7' },
+                { text: '默认排序', value: null },
+                { text: '价格最低', value: 'price' },
             ],
             option3: [
                 { text: '价格', value: '100' },
@@ -150,10 +144,10 @@ export default {
                 { text: '活动商品', value: '2' },
             ],
             priceList: [{
-                code: '0',
+                code: null,
                 value: '不限',
             }, {
-                code: '3',
+                code: '0-3',
                 value: '3万以下',
             },
             {
@@ -201,17 +195,21 @@ export default {
         },
         areaChange(res){
             this.query.city = res;
+            this.$refs.carlist.onRefresh(this.query);
             // this.$refs.city.toggle();
         },
         priceChange(res){
             this.query.price = res;
             this.$refs.priceitem.toggle();
+            this.$refs.carlist.onRefresh(this.query);
         },
         sortChange(res){
-            this.query.sorts = res;
+            this.query.sort = res;
+            this.$refs.carlist.onRefresh(this.query);
         },
         brandChange(res){
-            this.query.brandSeries = res;
+            this.query.brandseries = res;
+            this.$refs.carlist.onRefresh(this.query);
         }
     },
 

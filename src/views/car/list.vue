@@ -21,7 +21,7 @@
                                 {{item.kilometers}}公里 ／ {{item.city}}
                             </div>
                             <div class="car-price clearfix">
-                                <span class="sub-info">{{item.time}}</span>
+                                <span class="sub-info color-time">{{item.createtime}}</span>
                                 <span class="fr bold base-color"> {{item.price}}万</span>
                             </div>
                         </div>
@@ -36,13 +36,13 @@
 </template>
 <script>
 import {
-    Toast,
     PullRefresh,
     List,
     Cell,
     Icon,
     Loading
 } from 'vant';
+import Api from '@/api/index';
 export default {
     components: {
         [PullRefresh.name]: PullRefresh,
@@ -57,81 +57,9 @@ export default {
             finished: false,
             refreshing: false,
             list: [],
-            datalist: [{
-                'id': '1',
-                'licensingdate': '2020',
-                'brandseries': '奔驰 c200 自动智能型自动智能型自动智能型',
-                'kilometers': '25.5',
-                'condition': 'xxxxxx ',
-                'price': '7.9',
-                'imgurl': 'https://dss2.bdstatic.com/8_V1bjqh_Q23odCf/pacific/1951812166.jpg ',
-                'city': '合肥',
-                'phone': '奔驰 c200 ',
-                'source': '个人',
-                'time': '15:03'
-            }, {
-                'id': '2',
-                'licensingdate': '2020',
-                'brandseries': '奔驰 c200 自动智能型',
-                'kilometers': '25.5',
-                'condition': 'xxxxxx ',
-                'price': '7.9',
-                'imgurl': 'https://dss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2666014032,2820809245&fm=26&gp=0.jpg ',
-                'city': '合肥',
-                'phone': '奔驰 c200 ',
-                'source': '个人',
-                'time': '15:03'
-            },
-            {
-                'id': '3',
-                'licensingdate': '2020',
-                'brandseries': '奔驰 c200 自动智能型',
-                'kilometers': '25.5',
-                'condition': 'xxxxxx ',
-                'price': '7.9',
-                'imgurl': 'https://dss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3161057015,1042861478&fm=26&gp=0.jpg ',
-                'city': '合肥',
-                'phone': '奔驰 c200 ',
-                'source': '个人',
-                'time': '15:03'
-            }, {
-                'id': '4',
-                'licensingdate': '2020',
-                'brandseries': '奔驰 c200 自动智能型 ',
-                'kilometers': '25.5',
-                'condition': 'xxxxxx ',
-                'price': '7.9',
-                'imgurl': 'https://dss2.bdstatic.com/8_V1bjqh_Q23odCf/pacific/1951812166.jpg ',
-                'city': '合肥',
-                'phone': '奔驰 c200 ',
-                'source': '个人',
-                'time': '15:03'
-            }, {
-                'id': '5',
-                'licensingdate': '2020',
-                'brandseries': '奔驰 c200 自动智能型',
-                'kilometers': '25.5',
-                'condition': 'xxxxxx ',
-                'price': '7.9',
-                'imgurl': 'https://dss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2666014032,2820809245&fm=26&gp=0.jpg ',
-                'city': '合肥',
-                'phone': '奔驰 c200 ',
-                'source': '个人',
-                'time': '15:03'
-            },
-            {
-                'id': '6',
-                'licensingdate': '2020',
-                'brandseries': '奔驰 c200 自动智能型',
-                'kilometers': '25.5',
-                'condition': 'xxxxxx ',
-                'price': '7.9',
-                'imgurl': 'https://dss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3161057015,1042861478&fm=26&gp=0.jpg ',
-                'city': '合肥',
-                'phone': '奔驰 c200 ',
-                'source': '个人',
-                'time': '15:03'
-            }]
+            curPage: 1,
+            total: null,
+            datalist: []
         };
     },
     methods: {
@@ -148,27 +76,32 @@ export default {
         onLoad() {
             setTimeout(() => {
                 if (this.refreshing) {
-                    this.list = [];
+                    this.datalist = [];
                     this.refreshing = false;
                 }
-
-                for (let i = 0; i < 10; i++) {
-                    this.list.push(this.list.length + 1);
-                }
-                // this.loading = false;
-
-                if (this.list.length >= 40) {
-                    // this.finished = true;
-                }
+                let params = {
+                    page: this.curPage,
+                    rows: 10,
+                    ...this.query
+                };
+                Api.getCarList(params).then((data) => {
+                    this.loading = false;
+                    this.datalist = this.datalist.concat(data.rows);
+                    this.total = data.total;
+                    this.curPage++;
+                    if (this.datalist.length >= this.total) {
+                        this.finished = true;
+                    }
+                });
             }, 1000);
         },
-        onRefresh() {
+        onRefresh(query) {
             // 清空列表数据
             this.finished = false;
-
-            // 重新加载数据
-            // 将 loading 设置为 true，表示处于加载状态
             this.loading = true;
+            this.curPage =1;
+            this.datalist =[];
+            this.query = query;
             this.onLoad();
         },
         goSealCar(){
@@ -203,7 +136,10 @@ export default {
                 .sub-info {
                     margin-top: 3px;
                     font-size: 13px;
-                    color: #777
+                    color: #565656
+                }
+                .color-time{
+                   color:#777
                 }
             }
             .car-price {

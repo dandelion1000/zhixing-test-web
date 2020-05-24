@@ -12,6 +12,7 @@
         <div class="login-form">
             <!-- <div class="logo">智行科技 </div> -->
             <h2 class="text-center">智行科技</h2>
+            <span class="text-center">短信验证即登录，未注册将进入注册页面。</span>
             <div class="mrt40">
                 <van-field
                     class="zhixing-filed"
@@ -58,7 +59,7 @@
 <script>
 import { Toast, NoticeBar, Field, CellGroup, Button } from 'vant';
 // import TzdButton from '_c/Button.vue';
-import { countdown } from '@/util/util';
+import { countdown, getQueryStringByName } from '@/util/util';
 import  {sendVerifyCode, loginRegister}  from '@/api/user';
 export default {
     components: {
@@ -77,7 +78,10 @@ export default {
                 verifyCode: ''
             },
             codeStatus: 0,
-            codeRefresh: 60
+            codeRefresh: 60,
+            wxCode: '',
+            verifyCode: '',
+            openId: ''
         };
     },
     computed: {
@@ -86,7 +90,11 @@ export default {
         }
     },
     mounted() {
-
+        let str =  getQueryStringByName('code');
+        if (str) {
+            this.wxCode = str;
+        }
+        console.log(str);
     },
     methods: {
         sendSMS() {
@@ -97,7 +105,6 @@ export default {
             if (this.codeStatus) {
                 return;
             }
-            this.loginForm.verifyCode = '';
             if (this.loginForm.phone === '') {
                 Toast('请先填写手机号');
                 return false;
@@ -107,11 +114,13 @@ export default {
             }
             this.sloading = true;
             const params = {
-                phone: this.loginForm.phone
+                phone: this.loginForm.phone,
             };
-            sendVerifyCode(params).then(() => {
+            sendVerifyCode(params).then((res) => {
                 this.sloading = false;
                 this.$toast('验证码已发送');
+                console.log('res', res);
+                this.verifyCode = res;
                 this.codeRefresh = 60;
                 this.codeStatus = 1;
                 this.destroyCountDown = countdown(this.codeRefresh, {
@@ -124,29 +133,32 @@ export default {
             });
         },
         login() {
-            this.$router.push({name: 'home'});
-            // if (!/^1\d{10}$/.test(this.loginForm.phone)) {
-            //     this.$toast('手机号格式不正确');
-            //     return false;
-            // }
-            // const params = {
-            //     phone: this.loginForm.phone,
-            //     msgcode: this.loginForm.verifyCode
-            // };
-            // Toast.loading({
-            //     duration: 0,
-            //     mask: true,
-            //     forbidClick: true,
-            //     loadingType: 'spinner',
-            //     message: '登录中...'
-            // });
-            // loginRegister(params).then(() => {
-            //     Toast.clear();
-            //     this.$router.push({ name: 'home' });
-            // }).catch((res) => {
-            //     Toast(res.msg || '登录失败，请重试');
+            if (this.loginForm.verifyCode !== String(this.verifyCode)) {
+                return this.$toast('手机验证码不对');
+            }
+            if (!/^1\d{10}$/.test(this.loginForm.phone)) {
+                this.$toast('手机号格式不正确');
+                return false;
+            }
+            const params = {
+                phone: this.loginForm.phone,
+                code: this.wxCode
+            };
+            Toast.loading({
+                duration: 0,
+                mask: true,
+                forbidClick: true,
+                loadingType: 'spinner',
+                message: '登录中...'
+            });
+            loginRegister(params).then((res) => {
+                Toast.clear();
+                window.localStorage.setItem('usertoken', JSON.stringify(res.token));
+                this.$router.push({ name: 'home' });
+            }).catch((res) => {
+                Toast(res.msg || '登录失败，请重试');
 
-            // });
+            });
         }
     }
 };
@@ -162,7 +174,7 @@ export default {
         font-size: 14px;
       }
       .sms-btn {
-          color: #5160E0;
+          color: #f2826a;
       }
       .code-disabled {
         color: #D9D9D9;
