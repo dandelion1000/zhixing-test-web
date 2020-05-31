@@ -8,7 +8,9 @@ axios.defaults.headers.post['Content-Type'] = 'application/json';
 axios.defaults.transformRequest = [function (data) {
     return typeof data === 'object' ? JSON.stringify(data) : data;
 }];
-
+// const CancelToken = axios.CancelToken;
+// const source = CancelToken.source();
+// console.log('source', source);
 const CODE_MAP = {
     UNLOGIN: 101,
     SUCCESS: 200
@@ -28,8 +30,9 @@ export function post(url, data, config) {
 }
 
 export function get(url, data) {
-    return axios.get(url, {params: data}).then(dealApi, serverError);
+    return axios.get(url, {params: data}, ).then(dealApi, serverError);
 }
+// source.cancel('Operation canceled by the user.');
 
 function dealApi(res) {
     console.log('resde', res);

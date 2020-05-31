@@ -27,23 +27,6 @@
                         </van-cell>
                     </van-cell-group>
                 </van-checkbox-group>
-                <div class="pd20">
-                    变速器换挡方式:
-                </div>
-                <van-radio-group v-model="radio">
-                    <van-cell-group>
-                        <van-cell title="自动档" clickable @click="radio = '自动档'">
-                            <template #right-icon>
-                                <van-radio name="自动档" />
-                            </template>
-                        </van-cell>
-                        <van-cell title="手动档" clickable @click="radio = '手动档'">
-                            <template #right-icon>
-                                <van-radio name="手动档" />
-                            </template>
-                        </van-cell>
-                    </van-cell-group>
-                </van-radio-group>
                 <div class="mark-title-header">
                     备注：
                 </div>
@@ -90,7 +73,7 @@ import {
     CheckboxGroup,
     RadioGroup,
     Radio,
-    Button
+    Button,
 } from 'vant';
 export default {
     components: {
@@ -110,7 +93,7 @@ export default {
     data(){
         return {
             list: ['火烧', '泡水', '重大事故', '换件', '补漆'],
-            radio: '',
+            // radio: '',
             mark: '',
             result: [],
             show: false,
@@ -126,7 +109,7 @@ export default {
             this.show = true;
         },
         saveCondtion(){
-            let value = this.result.join(',') +',' +this.radio+','+this.mark;
+            let value = this.result.join(',') +'  '+this.mark;
             console.log(value);
             this.show = false;
             this.$emit('input', value);

@@ -1,7 +1,7 @@
 <template>
     <div class="car-detail">
         <van-swipe class="my-swipe" :autoplay="3000" indicator-color="white">
-            <template v-for="(image, index) in detailInfo.imgurl" >
+            <template v-for="(image, index) in detailInfo.imgArray" >
                 <van-swipe-item :key="index">
                     <img :src="image" />
                 </van-swipe-item>
@@ -11,6 +11,7 @@
             <div class="detail-car-title pdt10">
                 {{detailInfo.licensingdate}}款
                 {{detailInfo.brandseries}}
+                {{detailInfo.remarks}}
             </div>
             <div class="bold base-color pdt10 pdb10 border-bottom"> {{detailInfo.price}}万</div>
             <div class="car-every-info pdt20 pdb20 ">
@@ -33,8 +34,8 @@
                 <span>{{detailInfo.condition}}</span>
             </div>
             <div class="every-sub-item-info">
-                <label>车辆所在地  </label>
-                <span>{{detailInfo.city}}</span>
+                <label>车辆来源  </label>
+                <span>{{detailInfo.source}}</span>
             </div>
             <div class="every-sub-item-info">
                 <label>联系方式  </label>
@@ -73,28 +74,15 @@ export default {
     },
     data(){
         return {
-            detailInfo: {
-                'id': '5',
-                'licensingdate': '2020',
-                'brandseries': '奔驰 c200 自动智能型',
-                'kilometers': '25.5',
-                'condition': '泡水，自动挡 ',
-                'price': '7.9',
-                'imgurl': [
-                    'https://dss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2666014032,2820809245&fm=26&gp=0.jpg',
-                    'https://dss2.bdstatic.com/8_V1bjqh_Q23odCf/pacific/1951812166.jpg',
-                    'https://dss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2666014032,2820809245&fm=26&gp=0.jpg',
-                    'https://dss2.bdstatic.com/8_V1bjqh_Q23odCf/pacific/1951812166.jpg',
-                ],
-                'city': '合肥',
-                'phone': '17301329862',
-                'source': '个人',
-                'time': '15:03'
-            },
+            detailInfo: {},
         };
     },
     mounted() {
-
+        console.log(this.$route);
+        let info = JSON.parse(this.$route.query.infos);
+        info.imgArray=info.imgurl?info.imgurl.split(','):[];
+        this.detailInfo = info;
+        console.log('this.detailInfo', this.detailInfo);
     },
 
 };

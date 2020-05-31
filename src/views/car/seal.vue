@@ -3,43 +3,78 @@
         <Header :title="'卖车'"></Header>
         <van-form @submit="onSubmit">
             <van-cell title="首次上牌" is-link  @click.native="popTime">
-                {{formItem.licensingDate}}
+                {{formItem.licensingdate}}
             </van-cell>
             <van-cell title="品牌车系" is-link @click.native="popBrand" >
-                {{formItem.brandSeries}}
+                {{formItem.brandseries}}
             </van-cell>
+            <van-cell title="所在城市" is-link @click.native="popCity" >
+                {{formItem.city}}
+            </van-cell>
+            <van-cell title="车况描述" is-link @click.native="popCondtion" >
+                {{formItem.condition}}
+            </van-cell>
+            <van-field
+                name="radio"
+                label="换挡方式"
+                input-align="right"
+            >
+                <template #input>
+                    <van-radio-group
+                        v-model="formItem.remarks"
+                        direction="horizontal">
+                        <van-radio name="自动档">自动档 </van-radio>
+                        <van-radio name="手动档">手动档 </van-radio>
+                    </van-radio-group>
+                </template>
+            </van-field>
+            <van-field
+                name="radio"
+                label="车辆来源"
+                input-align="right"
+            >
+                <template #input>
+                    <van-radio-group v-model="formItem.source" direction="horizontal">
+                        <van-radio name="个人">个人 </van-radio>
+                        <van-radio name="车商">车商</van-radio>
+                    </van-radio-group>
+                </template>
+            </van-field>
             <van-field v-model="formItem.kilometers"
                        type="number"
                        input-align="right"
                        placeholder="请输入公里数"
                        label="公里数（万）" />
-            <van-cell title="车况描述" is-link @click.native="popCondtion" >
-                {{formItem.condition}}
-            </van-cell>
             <van-field v-model="formItem.price"
                        type="number"
                        input-align="right"
                        placeholder="请输入售价"
                        label="售价（万元）" />
-            <van-cell title="所在城市" is-link @click.native="popCity" >
-                {{formItem.city}}
-            </van-cell>
             <van-field v-model="formItem.phone"
-                       type="number"
                        input-align="right"
+                       type="tel"
+                       maxlength="11"
                        placeholder="请输入手机号"
                        label="手机号码 " />
             <div class="upload-imgs">
                 <div class="img-upload-title">
                     上传图片(最多可以上传3张)
                 </div>
-                <van-uploader v-model="fileList" :after-read="afterRead"  multiple :max-count="3" />
+                <van-uploader
+                    v-model="fileList"
+                    :after-read="afterRead"
+                    @delete="deleteImg"
+                    multiple
+                    :max-count="3" />
             </div>
             <div style="margin: 16px;">
                 <van-button
                     block
                     color="#f2826a"
                     size="middle"
+                    :loading="sloading"
+                    loading-text="提交中..."
+                    loading-type="spinner"
                     native-type="submit"
                 >
                     确定
@@ -61,7 +96,7 @@
                 </template>
             </div>
         </van-popup>
-        <brand-popup ref="brand" v-model="formItem.brandSeries"></brand-popup>
+        <brand-popup ref="brand" v-model="formItem.brandseries"></brand-popup>
         <city-popup ref="city" v-model="formItem.city"></city-popup>
         <condtion-popup ref="condtion" v-model="formItem.condition"></condtion-popup>
     </div>
@@ -76,7 +111,9 @@ import {
     Field,
     Form,
     Button,
-    Uploader
+    Uploader,
+    RadioGroup,
+    Radio
 } from 'vant';
 import Api from '@/api/index';
 
@@ -94,6 +131,8 @@ export default {
         [Field.name]: Field,
         [Button.name]: Button,
         [Uploader.name]: Uploader,
+        [RadioGroup.name]: RadioGroup,
+        [Radio.name]: Radio,
         Header,
         [BrandPopup.name]: BrandPopup,
         'brand-popup': BrandPopup,
@@ -103,16 +142,30 @@ export default {
     data(){
         return {
             show: false,
+            sloading: false,
             formItem: {
-                licensingDate: '',
-                brandSeries: '',
+                licensingdate: '',
+                brandseries: '',
+                city: '',
+                condition: '',
+                remarks: '',
+                source: '',
                 kilometers: '',
                 price: '',
-                condition: '',
-                imgurl: '',
-                source: '',
-                city: '',
                 phone: '',
+                imgurl: [],
+            },
+            mapmessage: {
+                licensingdate: '首次上牌时间',
+                brandseries: '品牌车系',
+                city: '所在城市',
+                condition: '车况描述',
+                remarks: '换挡方式',
+                source: '车辆来源',
+                kilometers: '公里数',
+                price: '价格',
+                phone: '手机号',
+                imgurl: '车辆图片',
             },
             fileList: [],
             timeList: []
@@ -122,29 +175,55 @@ export default {
         this.creatTimeList();
     },
     methods: {
-        afterRead(res){
-            Api.uploadFile(res.file).then((res) => {
+        afterRead(file){
+            file.status = 'uploading';
+            file.message = '上传中...';
+            Api.uploadFile(file.file).then((res) => {
                 console.log(res);
+                file.status = 'success';
+                this.formItem.imgurl.push(res.insertUrl);
+            }).catch(() => {
+                file.status = 'failed';
+                file.message = '上传失败';
             });
         },
-
+        deleteImg(res){
+            console.log('delete', res);
+        },
         creatTimeList(){
             let array = [];
             for(let i=20;i>=0;i--){
                 array.unshift(new Date().getFullYear()-i);
             }
             this.timeList = array;
-            console.log(this.timeList);
         },
         selectTime(time){
             this.show = false;
-            this.formItem.licensingDate = time;
+            this.formItem.licensingdate = time;
         },
         onSubmit(){
-            let params = this.formItem;
-            console.log(params);
-            Api.saveReleaseCar(params).then((res) => {
-                console.log('res', res);
+            if (this.sloading){
+                return;
+            }
+            let params = {
+                ...this.formItem,
+                imgurl: this.formItem.imgurl.join()
+            };
+            for(let i in params ){
+                if (!params[i]){
+                    return Toast(`${this.mapmessage[i]}必填`);
+                }
+            }
+            this.sloading = true;
+            Api.saveReleaseCar(params).then(() => {
+                Toast('提交成功');
+                this.sloading = false;
+                this.$router.push({
+                    name: 'list'
+                });
+            }).catch(() => {
+                Toast('系统错误，稍后再试');
+                this.sloading = false;
             });
         },
         popTime(){
@@ -164,6 +243,9 @@ export default {
 </script>
 <style lang="less">
 .seal-car {
+    .van-sticky--fixed {
+        background: #fff;
+    }
     .van-cell__title {
         color: #969799
     }
@@ -173,6 +255,11 @@ export default {
     }
     .van-field__control--right {
         padding-right: 20px
+    }
+    .van-radio--horizontal {
+        margin-right: 0;
+        margin-left: 40px;
+        width: 75px;
     }
     .upload-imgs {
         padding: 10px 20px;

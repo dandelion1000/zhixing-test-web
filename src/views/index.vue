@@ -1,7 +1,8 @@
 <template>
     <div class="car-display-index">
         <van-sticky>
-            <van-dropdown-menu active-color="#f2826a">
+            <van-dropdown-menu
+                active-color="#f2826a">
                 <van-dropdown-item
                     v-model="query.sort"
                     :options="option1"
@@ -72,7 +73,6 @@
 </template>
 <script>
 import {
-    Toast,
     Col,
     Row,
     Field,
@@ -217,24 +217,25 @@ export default {
 </script>
 <style lang="less">
 .car-display-index {
-    .van-popup{
-        overflow-y: none;
-    }
+
+    // .van-popup{
+    //     overflow-y: none;
+    // }
     .header-title {
         text-align: center;
         padding: 5.33333vw;
         font-size: 4.8vw;
         position: fixed;
     }
-    .van-dropdown-item__content {
-        max-height: 75%;
-        overflow-y: scroll;
-    }
+    // .van-dropdown-item__content {
+    //     max-height: 75%;
+    //     overflow-y: hidden;
+    // }
     .van-index-bar {
-        position: relative;
+        // position: relative;
         // top: 82px;
         // max-height: 100%;
-        overflow-y: scroll;
+        // overflow-y: scroll;
     }
     .header-title {
         text-align: center;

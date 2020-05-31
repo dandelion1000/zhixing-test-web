@@ -2,18 +2,19 @@ import Vue from 'vue';
 import Router from 'vue-router';
 // import menuModule from './router';
 Vue.use(Router);
-import HomeIndex from '@/views/index.vue';
+import CarList from '@/views/index.vue';
 import Login from '@/views/login/index.vue';
 import SealCar from '@/views/car/seal.vue';
 import VipCard from '@/views/user/vipcard.vue';
 import carDetail from '@/views/car/detail.vue';
 const router = new Router({
-    // mode: 'history',
+    mode: 'history',
+    base: '/h5car/',
     routes: [
         {
-            path: '/home',
-            name: 'home',
-            component: HomeIndex,
+            path: '/',
+            name: 'list',
+            component: CarList,
             meta: {
                 title: '汽车列表'
             },
@@ -42,11 +43,11 @@ const router = new Router({
             },
         },
         {
-            path: '/',
+            path: '/login',
             name: 'login',
             component: Login,
             meta: {
-                title: ''
+                title: '登录'
             },
         },
         {
@@ -86,13 +87,25 @@ function generateRoutesFromMenu(menu = [], routes = []) {
 }
 
 router.beforeEach((to, from, next) => {
-    next();
     const appid = 'wx1683897a0af2da49';
-    const redirect_uri = 'http%3A%2F%2Fwww.cheshouyun.com';
-    // if (local) {
+    const redirect_uri = 'http%3A%2F%2Fwww.cheshouyun.com%2Fh5car%2Flogin';
+    // const redirect_uri = 'http%3A%2F%2Fwww.tsingxing.com%2Fh5car%2Flogin';
+    const getAuthCodeUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appid}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_base#wechat_redirect`;
+    let usermobile = localStorage.getItem('usermobile');
+    console.log('usermobile', usermobile);
+    let bol =  usermobile==='undefined' || !usermobile;
+    /**
+     * 去往vipcard页面，需要判断是否登录过，如果没有，则应拿到code并跳转登录页,还有发布页面也是
+     */
+    let authpath = ['vipcard', 'seal'];
+    console.log('authpath.includes(to.name)', authpath.includes(to.name));
+    if (authpath.includes(to.name) && bol) {
+        window.location.href = getAuthCodeUrl;
+    }else {
+        next();
+    }
+    // next();
 
-    // }
-    // location.href(`https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appid}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_base#wechat_redirect`);
     if (to.meta.title) {
         document.title = to.meta.title;
     }

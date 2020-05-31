@@ -46,6 +46,9 @@
                     :disabled="loginForm.phone=='' || loginForm.verifyCode==''"
                     block
                     color="#f2826a"
+                    :loading="rloading"
+                    loading-text="登录中..."
+                    loading-type="spinner"
                     size="middle"
                     native-type="submit"
                     @click="login"
@@ -72,6 +75,7 @@ export default {
     data() {
         return {
             destroyCountDown: null,
+            rloading: false,
             sloading: false,
             loginForm: {
                 phone: '',
@@ -112,10 +116,10 @@ export default {
                 Toast('手机号格式不正确');
                 return false;
             }
-            this.sloading = true;
             const params = {
                 phone: this.loginForm.phone,
             };
+            this.sloading = true;
             sendVerifyCode(params).then((res) => {
                 this.sloading = false;
                 this.$toast('验证码已发送');
@@ -144,20 +148,14 @@ export default {
                 phone: this.loginForm.phone,
                 code: this.wxCode
             };
-            Toast.loading({
-                duration: 0,
-                mask: true,
-                forbidClick: true,
-                loadingType: 'spinner',
-                message: '登录中...'
-            });
-            loginRegister(params).then((res) => {
-                Toast.clear();
-                window.localStorage.setItem('usertoken', JSON.stringify(res.token));
+            this.rloading = true;
+            loginRegister(params).then(() => {
+                this.rloading = false;
+                localStorage.setItem('usermobile', JSON.stringify(this.loginForm.phone));
                 this.$router.push({ name: 'home' });
             }).catch((res) => {
+                this.rloading = false;
                 Toast(res.msg || '登录失败，请重试');
-
             });
         }
     }

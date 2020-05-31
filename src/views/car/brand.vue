@@ -5,7 +5,7 @@
             :overlay="false"
             :closeable="true"
             position="right"
-            :style="{width:'100%', height: '100%' }" >
+            :style="{width:'100%', height: '100%', overflow: 'auto'}" >
             <van-sticky>
                 <div class="fix-header-title text-center pd21">
                     选择品牌系数
@@ -82,6 +82,8 @@ export default {
     methods: {
         open(){
             this.show = true;
+            // document.querySelector('body').classList.remove('van-overflow-hidden');
+            // document.body.removeAttribute('style', 'overflow:hidden !important');
         },
         openSubSeries(index, items){
             if (index!==this.parentActive) {

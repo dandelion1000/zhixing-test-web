@@ -4,14 +4,16 @@
             <van-list
                 v-model="loading"
                 :finished="finished"
+                :error.sync="error"
+                error-text="请求失败，点击重新加载"
                 finished-text="没有更多了"
                 @load="onLoad"
             >
                 <template v-for="item in datalist" >
                     <div class="car-item-li flex flex-between"
-                         @click="goCarDetail(item.id)"
+                         @click="goCarDetail(item)"
                          :key="item.id">
-                        <img :src="item.imgurl" alt="">
+                        <img :src="item.imgurl?item.imgurl.split(',')[0]:item.imgurl" alt="">
                         <div class="right-series">
                             <div class="title">
                                 {{item.licensingdate}}款  {{item.brandseries}}
@@ -53,6 +55,7 @@ export default {
     },
     data(){
         return {
+            error: false,
             loading: false,
             finished: false,
             refreshing: false,
@@ -63,17 +66,21 @@ export default {
         };
     },
     methods: {
-        goCarDetail(id){
+        goCarDetail(item){
             this.$router.push(
                 {
                     name: 'carDetail',
                     params: {
-                        id: id
+                        id: item.id
+                    },
+                    query: {
+                        infos: JSON.stringify(item)
                     }
                 }
             );
         },
         onLoad() {
+            this.error = false;
             setTimeout(() => {
                 if (this.refreshing) {
                     this.datalist = [];
@@ -89,9 +96,12 @@ export default {
                     this.datalist = this.datalist.concat(data.rows);
                     this.total = data.total;
                     this.curPage++;
-                    if (this.datalist.length >= this.total) {
+                    if (this.datalist.length >= this.total || !data.rows.length) {
                         this.finished = true;
                     }
+                }).catch(() => {
+                    this.loading = false;
+                    this.error = true;
                 });
             }, 1000);
         },

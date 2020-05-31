@@ -7,12 +7,12 @@
                         <div class="company-title">
                             {{whichCompany}}
                         </div>
-                        <van-icon name="arrow-down" />
+                        <van-icon v-if="this.columns.length>1"  name="arrow-down" />
                     </div>
                     <div class="user-account flex flex-around">
                         <div class="every-item">
                             <div class="number">
-                                {{recordlist.money}}
+                                {{accountRest.money}}
                             </div>
                             <div class="text-intro">
                                 余额
@@ -23,7 +23,7 @@
                         </div>
                         <div class="every-item">
                             <div class="number">
-                                {{recordlist.integral}}
+                                {{accountRest.integral}}
                             </div>
                             <div class="text-intro">
                                 积分
@@ -40,41 +40,56 @@
                     <div class="detail-car-info">
                         <div class="every-info-item">
                             <label>本次保养：</label>
-                            <span>{{recordlist.stadate}}</span>
+                            <span>
+                                <span v-if="warnInfo.stadate">
+                                    {{warnInfo.stadate}}
+                                </span>
+                                <span v-if="warnInfo.mileage">
+                                    {{warnInfo.mileage}}万公里
+                                </span>
+                            </span>
                         </div>
                         <div class="every-info-item">
                             <label>下次保养：</label>
-                            <span>{{recordlist.enddate}}</span>
+                            <span>
+                                <span v-if="warnInfo.enddate">
+                                    {{warnInfo.enddate}}
+                                </span>
+                                <span v-if="warnInfo.mileageend">
+                                    {{warnInfo.mileageend}}万公里
+                                </span>
+
+                            </span>
                         </div>
                         <div class="every-info-item">
                             <label>保险时间：</label>
-                            <span>{{recordlist.insurancedate}}</span>
+                            <span>{{warnInfo.insurancedate}}</span>
                         </div>
                         <div class="every-info-item">
                             <label>年检时间：</label>
-                            <span>{{recordlist.stateInspectiondate}}</span>
+                            <span>{{warnInfo.stateInspectiondate}}</span>
                         </div>
                         <div class="every-info-item">
                             <label>绑定车辆：</label>
-                            <span>{{recordlist.car}}</span>
+                            <span>{{warnInfo.carno}}</span>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="combo-main">
-                <div class="combo-bg">
+                <div :class="'tab-card-change'+curTab">
                     <div class="combo-title flex flex-between">
-                        <div>剩余套餐卡</div>
-                        <div>已用套餐卡</div>
+                        <div class="" @click="tabChange(1)">剩余套餐卡</div>
+                        <div class="" @click="tabChange(2)">已用套餐卡</div>
                     </div>
                 </div>
                 <div class="padding-16 combo-box-shadow">
                     <div class="table-header-label">
                         <van-row>
-                            <van-col span="6">序号</van-col>
-                            <van-col span="6">项目名称</van-col>
-                            <van-col span="6">数量</van-col>
-                            <van-col span="6">创建时间</van-col>
+                            <van-col span="3">序号</van-col>
+                            <van-col span="7">项目名称</van-col>
+                            <van-col span="7">数量</van-col>
+                            <van-col span="7">创建时间</van-col>
                         </van-row>
                     </div>
                     <van-row
@@ -82,28 +97,36 @@
                         v-for="(item,index) in comboList"
                         :key="index"
                     >
-                        <van-col span="6">
+                        <van-col span="3">
                             <span class="index-circle">
                                 {{index+1}}
                             </span>
                         </van-col>
-                        <van-col span="6">
+                        <van-col span="7">
                             {{item.projectname}}
                         </van-col>
-                        <van-col span="6">
+                        <van-col span="7">
                             {{item.account}}
                         </van-col>
-                        <van-col span="6">
+                        <van-col span="7">
                             {{item.createdate}}
                         </van-col>
                     </van-row>
-                    <div class="view-more-data">
+                    <van-loading
+                        v-if="sloading"
+                        type="spinner"
+                        size="34px" />
+
+                    <div class="view-more-data"  v-if="curTab==1 && !sloading">
+                        <span>没有更多了</span>
+                    </div>
+                    <div class="view-more-data" v-if="curTab==2 && !sloading">
                         <span
                             @click="viewMore"
                             v-if="comboList.length < total">
                             查看更多  <van-icon name="arrow-down" />
                         </span>
-                        <span v-else>没有更多了</span>
+                        <span  v-else>没有更多了</span>
                     </div>
                 </div>
             </div>
@@ -120,7 +143,8 @@
     </div>
 </template>
 <script>
-import {Sticky, Popup, Picker, Icon, Col, Row} from 'vant';
+import {getUserCarInfo, deadlineWarn, getAccountRest, restCards, usedCards} from '@/api/user';
+import {Sticky, Popup, Picker, Icon, Col, Row, Loading} from 'vant';
 export default {
     components: {
         [Sticky.name]: Sticky,
@@ -128,7 +152,8 @@ export default {
         [Popup.name]: Popup,
         [Picker.name]: Picker,
         [Col.name]: Col,
-        [Row.name]: Row
+        [Row.name]: Row,
+        [Loading.name]: Loading
     },
     props: {
         title: {
@@ -137,53 +162,118 @@ export default {
     },
     data() {
         return {
-            total: 10,
-            recordlist: {
-                'money': '100', //余额
-                'integral': '1900', //积分
-                'stadate': '2012-12-12 ', //本次保养
-                'enddate': '2013-12-12', //下次保养
-                'insurancedate': '2012-12-12', //保险时间
-                'stateInspectiondate': '2012-12-12'//年检时间
+            total: 0,
+            page: 1,
+            rows: 3,
+            curTab: 1,
+            accountRest: {
+                money: '0',
+                integral: '0'
             },
-            comboList: [{
-                'projectname': '洗车',
-                'account': '2',
-                'createdate': '2020-12-13'
-            }, {
-                'projectname': '洗车',
-                'account': '2',
-                'createdate': '2020-12-13'
-            }, {
-                'projectname': '洗车',
-                'account': '2',
-                'createdate': '2020-12-13'
-            }],
-            whichCompany: '清行科技(皖A545466)',
+            comboList: [],
+            comboRestList: [],
+            comboUsedList: [],
+            whichCompany: '',
             show: false,
-            columns: ['巢湖洁诺(皖AW2L66)', '清行科技(皖A545466)'],
-            companyList: [
-                {
-                    name: '巢湖洁诺(皖AW2L66)'
-                }, {
-                    name: '清行科技(皖A545466)'
-                }]
+            columns: [],
+            companyList: [],
+            warnInfo: {},
+            curCarIndex: 0,
+            sloading: true
         };
     },
+    mounted() {
+        this.getUserCarInfo();
+    },
     methods: {
+        getUserCarInfo(){
+            let userPhone = localStorage.getItem('usermobile');
+            getUserCarInfo({
+                phone: userPhone //15255550012
+            }).then((res) => {
+                console.log(res);
+                this.companyList = res;
+                this.columns = Array.isArray(res)
+                    ? res.map((item) => {
+                        return `${item.motorname}+(${item.carno})`;
+                    })
+                    :[];
+                if (this.columns.length > 0) {
+                    this.whichCompany = this.columns[0];
+                    this.getDeadlineWarn();
+                    this.getAccountRest();
+                    this.getRestCards();
+                }
+            });
+        },
+        getDeadlineWarn(){
+            // this.curCarIndexs
+            let id = this.companyList[this.curCarIndex].carid;
+            deadlineWarn({
+                carid: id
+            }).then((res) => {
+                console.log('warnInfo', res);
+                this.warnInfo = res;
+            });
+        },
+        getAccountRest(){
+            let id = this.companyList[this.curCarIndex].clientid;
+            getAccountRest({id: id}).then((res) => {
+                console.log('rest', res);
+                this.accountRest = res;
+            });
+        },
+        getRestCards(){
+            this.sloading = true;
+            restCards({
+                clientid: this.companyList[this.curCarIndex].clientid
+            }).then((res) => {
+                console.log('getRestCards', res);
+                this.sloading = false;
+                this.comboList = res;
+            });
+        },
+        getusedCards(){
+            this.sloading = true;
+            usedCards({
+                page: this.page,
+                rows: this.rows,
+                clientid: this.companyList[this.curCarIndex].clientid
+            }).then((res) => {
+                console.log('getusedCards', res);
+                this.sloading = false;
+                this.total =res.total;
+                this.comboList = res.rows;
+            });
+        },
         onConfirm(value, index) {
             console.log(value, index);
             this.whichCompany = value;
+            this.curCarIndex = index;
+            this.getDeadlineWarn();
             this.show = false;
+        },
+        tabChange(index){
+            this.curTab = index;
+            console.log(index);
+            this.comboList = [];
+            this.sloading = true;
+            index===1 ? this.getRestCards() : this.getusedCards()
+            ;
         },
         onChange(picker, value, index) {
             console.log(value, index);
+            // this.curCarIndex = index;
+            // this.whichCompany = value;
 
         },
         viewMore(){
             this.comboList = this.comboList.concat(this.comboList);
         },
         openSelectCompany(){
+            if (this.columns.length===1) {
+                return;
+            }
             this.show = true;
         },
         onCancel() {
@@ -258,7 +348,7 @@ export default {
                 margin-top: 10px;
                 label{
                     color:rgba(153,153,153,1);
-                    margin-right: 12px;
+                    // margin-right: 5px;
                 }
                 span {
                     color:rgba(34,34,34,1);
@@ -272,6 +362,9 @@ export default {
             background:rgba(255,255,255,1);
             box-shadow:0px 12px 29px 0px rgba(170,170,170,0.24);
             border-radius:0px 0px 24px 24px;
+            .van-loading--spinner {
+                text-align: center
+            }
         }
         .combo-title{
             color:#625921;
@@ -295,6 +388,9 @@ export default {
                 text-align: center;
                 line-height: 23px;
             }
+        }
+        .van-col{
+            text-align: center;
         }
         .view-more-data {
             border-top: 1px solid #E8E8E8;

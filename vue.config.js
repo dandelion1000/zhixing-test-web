@@ -46,6 +46,7 @@ module.exports = {
             }
         }
     },
+    publicPath: './',
     devServer: {
         port: 8989, // 端口号
         https: false, // https:{type:Boolean}
