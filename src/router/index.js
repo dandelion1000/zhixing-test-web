@@ -8,7 +8,7 @@ import SealCar from '@/views/car/seal.vue';
 import VipCard from '@/views/user/vipcard.vue';
 import carDetail from '@/views/car/detail.vue';
 const router = new Router({
-    mode: 'history',
+    // mode: 'history',
     base: '/h5car/',
     routes: [
         {
@@ -88,7 +88,7 @@ function generateRoutesFromMenu(menu = [], routes = []) {
 
 router.beforeEach((to, from, next) => {
     const appid = 'wx1683897a0af2da49';
-    const redirect_uri = 'http%3A%2F%2Fwww.cheshouyun.com%2Fh5car%2Flogin';
+    const redirect_uri = 'http%3A%2F%2Fwww.cheshouyun.com%2Fh5car%2F%23%2Flogin';
     // const redirect_uri = 'http%3A%2F%2Fwww.tsingxing.com%2Fh5car%2Flogin';
     const getAuthCodeUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appid}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_base#wechat_redirect`;
     let usermobile = localStorage.getItem('usermobile');

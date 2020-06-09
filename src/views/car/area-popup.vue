@@ -60,15 +60,17 @@ export default {
         open(){
             this.areashow = true;
         },
+        close(){
+            this.areashow  = false;
+            this.$emit('on-close');
+        },
         selectArea(index, item){
             this.curActive = index;
             this.$emit('input', item);
             this.$emit('on-change', item);
-            this.close();
-        },
-        close(){
             this.areashow  = false;
-        }
+
+        },
 
     },
 };

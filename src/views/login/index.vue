@@ -1,6 +1,6 @@
 <template>
     <div class="login">
-        <van-notice-bar
+        <!-- <van-notice-bar
             class="notice-bar"
             color="#CA7C29"
             background="#FFF0D9"
@@ -8,10 +8,10 @@
             left-icon="warning-o"
         >
             发布前需要您先登录账号
-        </van-notice-bar>
+        </van-notice-bar> -->
         <div class="login-form">
             <!-- <div class="logo">智行科技 </div> -->
-            <h2 class="text-center">智行科技</h2>
+            <h2 class="text-center">车手汽修</h2>
             <span class="text-center">短信验证即登录，未注册将进入注册页面。</span>
             <div class="mrt40">
                 <van-field
@@ -85,7 +85,8 @@ export default {
             codeRefresh: 60,
             wxCode: '',
             verifyCode: '',
-            openId: ''
+            openId: '',
+            lastroute: ''
         };
     },
     computed: {
@@ -99,6 +100,12 @@ export default {
             this.wxCode = str;
         }
         console.log(str);
+    },
+    beforeRouteEnter(to, from, next) {
+        next(vm => {
+            // 通过 `vm` 访问组件实例
+            vm.lastroute = from.name;
+        });
     },
     methods: {
         sendSMS() {
@@ -152,7 +159,10 @@ export default {
             loginRegister(params).then(() => {
                 this.rloading = false;
                 localStorage.setItem('usermobile', JSON.stringify(this.loginForm.phone));
-                this.$router.push({ name: 'home' });
+                let rlink = this.lastroute==='list'?'seal':'vipcard';
+                this.$router.push({ name: rlink });
+                // this.$router.go(-1);
+
             }).catch((res) => {
                 this.rloading = false;
                 Toast(res.msg || '登录失败，请重试');

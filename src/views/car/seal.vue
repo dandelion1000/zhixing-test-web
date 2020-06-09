@@ -50,12 +50,12 @@
                        input-align="right"
                        placeholder="请输入售价"
                        label="售价（万元）" />
-            <van-field v-model="formItem.phone"
+            <!-- <van-field v-model="formItem.phone"
                        input-align="right"
                        type="tel"
                        maxlength="11"
                        placeholder="请输入手机号"
-                       label="手机号码 " />
+                       label="手机号码 " /> -->
             <div class="upload-imgs">
                 <div class="img-upload-title">
                     上传图片(最多可以上传3张)
@@ -64,7 +64,6 @@
                     v-model="fileList"
                     :after-read="afterRead"
                     @delete="deleteImg"
-                    multiple
                     :max-count="3" />
             </div>
             <div style="margin: 16px;">
@@ -164,7 +163,7 @@ export default {
                 source: '车辆来源',
                 kilometers: '公里数',
                 price: '价格',
-                phone: '手机号',
+                // phone: '手机号',
                 imgurl: '车辆图片',
             },
             fileList: [],
@@ -207,14 +206,28 @@ export default {
             }
             let params = {
                 ...this.formItem,
-                imgurl: this.formItem.imgurl.join()
+                imgurl: this.formItem.imgurl.join(),
             };
             for(let i in params ){
                 if (!params[i]){
                     return Toast(`${this.mapmessage[i]}必填`);
                 }
             }
+            let reg1 =  /^((([1-9]\d{0,1}|0)(\.\d+)?)|100)$/;
+            let reg2 =  /^((([1-9]\d{0,1}|0|([1-2]\d{2}))(\.\d{1,2})?)|100|300)$/;
+
+            if  (!reg1.test(this.formItem.kilometers)){
+                return Toast('请填入0-100以内包括小数的合法公里数');
+            }
+            if  (!reg2.test(this.formItem.price)){
+                return Toast('请填入0-300以内保留最多两位小数的合法金额数字');
+            }
             this.sloading = true;
+            params = {
+                ...params,
+                createuser: JSON.parse(localStorage.getItem('usermobile'))
+            };
+            console.log('params', params);
             Api.saveReleaseCar(params).then(() => {
                 Toast('提交成功');
                 this.sloading = false;

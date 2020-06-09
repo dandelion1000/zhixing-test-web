@@ -46,7 +46,7 @@ module.exports = {
             }
         }
     },
-    publicPath: './',
+    publicPath: '/h5car',
     devServer: {
         port: 8989, // 端口号
         https: false, // https:{type:Boolean}
@@ -54,7 +54,7 @@ module.exports = {
         // hotOnly: true, // 热更新
         proxy: {
             '/': {
-                target: 'http://chouqin-123.vicp.net',
+                target: 'http://www.cheshouyun.com/',
                 ws: true,
                 changeOrigin: true,
                 secure: false

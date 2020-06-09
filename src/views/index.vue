@@ -1,13 +1,38 @@
 <template>
     <div class="car-display-index">
         <van-sticky>
-            <van-dropdown-menu
+            <van-row
+                class="top-header-search"
+                type="flex"
+                justify="space-between">
+                <van-col
+                    :class="{'tab-active':curATab==1}"
+                    span="6"
+                    @click="openBrand(1)">
+                    品牌
+                </van-col>
+                <van-col
+                    :class="{'tab-active':curATab==2}"
+                    span="6"
+                    @click="openPrice(2)"
+                >
+                    价格
+                </van-col>
+                <van-col
+                    :class="{'tab-active':curATab==3}"
+                    span="6"
+                    @click="openArea(3)">
+                    区域
+                </van-col>
+                <van-col
+                    :class="{'tab-active':curATab==4}"
+                    span="6"
+                    @click="searchMy(4)">
+                    我的发布
+                </van-col>
+            </van-row>
+            <!-- <van-dropdown-menu
                 active-color="#f2826a">
-                <van-dropdown-item
-                    v-model="query.sort"
-                    :options="option1"
-                    @change="sortChange"
-                />
                 <van-dropdown-item title="品牌" ref="brand" @open="openBrand">
                 </van-dropdown-item>
                 <van-dropdown-item title="价格" ref="priceitem">
@@ -64,11 +89,69 @@
 
                 <van-dropdown-item title="区域" ref="city" @open="openArea">
                 </van-dropdown-item>
-            </van-dropdown-menu>
+            </van-dropdown-menu> -->
         </van-sticky>
-        <car-list ref="carlist"></car-list>
-        <brand-popup ref="brand" @on-change="brandChange"></brand-popup>
-        <area-popup ref="area" @on-change="areaChange"></area-popup>
+        <car-list ref="carlist" :is-check-my="isCheckMy"></car-list>
+        <van-popup
+            v-model="showPrice"
+            position="top"
+            :style="{ height: '50%' }"
+            :overlay-class="priceOverlay"
+            :class="{'price-overlay-body':isAddStyle}"
+            @close="closePrice"
+        >
+            <div class="white-bg">
+                <div class="self-define ">
+                    <div class="price-title">自定义价格 </div>
+                    <div class="flex flex-center">
+                        <van-field
+                            border
+                            size="small"
+                            class="file-input-num gray-bg"
+                            v-model="query.price1"
+                            type="number"  >
+                            <template #button>
+                                万
+                            </template>
+                        </van-field>
+                        <span class="line">——</span>
+                        <van-field
+                            border
+                            size="small"
+                            class="file-input-num gray-bg"
+                            v-model="query.price2"
+                            type="number"  >
+                            <template #button>
+                                万
+                            </template>
+                        </van-field>
+                        <van-button
+                            color="#f2826a"
+                            size="small"
+                            :disabled="!query.price1||!query.price2"
+                            @click="priceChange(query.price1+'-'+query.price2)"
+                        >
+                            确定
+                        </van-button>
+                    </div>
+                </div>
+                <div class="price-list">
+                    <van-tag
+                        v-for="(item,index) in priceList"
+                        :key="index"
+                        @click="selectPrice(index,item.code)"
+                        :color="curActive==index?'#f2826a':'#969799'"
+                        class="tag-item-li"
+                        size="large"
+                        plain
+                    >
+                        {{item.value}}
+                    </van-tag>
+                </div>
+            </div>
+        </van-popup>
+        <brand-popup ref="brand" @on-change="brandChange" @on-close="onClose"></brand-popup>
+        <area-popup ref="area" @on-change="areaChange" @on-close="onClose"></area-popup>
     </div>
 </template>
 <script>
@@ -86,7 +169,7 @@ import {
     Button,
     Area,
     Sticky,
-    Loading
+    Loading,
 } from 'vant';
 import areaList from '@/util/area.js';
 import CarList from './car/list.vue';
@@ -115,12 +198,17 @@ export default {
     },
     data() {
         return {
+            showPrice: false,
+            curATab: null,
+            isCheckMy: false,
             query: {
                 sort: null,
                 brandseries: null,
                 price: null,
-                city: null
+                city: null,
+                createuser: null
             },
+            priceOverlay: '',
             brandlist: BrandList,
             indexList: ['A', 'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'W', 'X', 'Y', 'Z'],
             areaList: areaList,
@@ -128,11 +216,12 @@ export default {
             value3: '100',
             value4: 'all',
             show: false,
+            isAddStyle: false,
             curActive: '0',
-            option1: [
-                { text: '默认排序', value: null },
-                { text: '价格最低', value: 'price' },
-            ],
+            // option1: [
+            //     { text: '默认排序', value: null },
+            //     { text: '价格最低', value: 'price' },
+            // ],
             option3: [
                 { text: '价格', value: '100' },
                 { text: '新款商品', value: '200' },
@@ -179,13 +268,38 @@ export default {
     methods: {
         selectPrice(index, price){
             this.curActive = index;
+            this.isCheckMy = false;
             this.priceChange(price);
         },
-        openBrand(){
-            this.$refs.brand.open();
-
+        onClose(){
+            this.curATab=null;
         },
-        openArea(){
+        searchMy(index){
+            this.isCheckMy = true;
+            this.curATab = index;
+            this.query.createuser=JSON.parse(localStorage.getItem('usermobile'));
+            this.$refs.carlist.onRefresh(this.query);
+        },
+        openPrice(index){
+            this.isCheckMy = false;
+            this.curATab = index;
+            this.showPrice=true;
+            this.isAddStyle = true;
+            this.priceOverlay = 'price-overlay-body';
+        },
+        closePrice(){
+            this.isAddStyle = false;
+            this.showPrice=false;
+            this.priceOverlay='';
+        },
+        openBrand(index){
+            this.isCheckMy = false;
+            this.curATab = index;
+            this.$refs.brand.open();
+        },
+        openArea(index){
+            this.isCheckMy = false;
+            this.curATab = index;
             this.$refs.area.open();
         },
         openSubSeries(items){
@@ -196,11 +310,11 @@ export default {
         areaChange(res){
             this.query.city = res;
             this.$refs.carlist.onRefresh(this.query);
-            // this.$refs.city.toggle();
         },
         priceChange(res){
             this.query.price = res;
-            this.$refs.priceitem.toggle();
+            // this.$refs.priceitem.toggle();
+            this.showPrice=false;
             this.$refs.carlist.onRefresh(this.query);
         },
         sortChange(res){
@@ -216,27 +330,28 @@ export default {
 };
 </script>
 <style lang="less">
-.car-display-index {
 
-    // .van-popup{
-    //     overflow-y: none;
-    // }
+.car-display-index {
+    .top-header-search {
+        padding: 15px 10px;
+        text-align: center;
+        box-shadow:0 2px 12px rgba(100, 101, 102, 0.08);
+        background: #fff;
+        .van-col--6 {
+            position: relative;
+        }
+
+        .tab-active{
+            color:#f2826a
+        }
+    }
     .header-title {
         text-align: center;
         padding: 5.33333vw;
         font-size: 4.8vw;
         position: fixed;
     }
-    // .van-dropdown-item__content {
-    //     max-height: 75%;
-    //     overflow-y: hidden;
-    // }
-    .van-index-bar {
-        // position: relative;
-        // top: 82px;
-        // max-height: 100%;
-        // overflow-y: scroll;
-    }
+
     .header-title {
         text-align: center;
         padding: 20px;

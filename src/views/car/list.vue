@@ -10,24 +10,32 @@
                 @load="onLoad"
             >
                 <template v-for="item in datalist" >
-                    <div class="car-item-li flex flex-between"
-                         @click="goCarDetail(item)"
-                         :key="item.id">
-                        <img :src="item.imgurl?item.imgurl.split(',')[0]:item.imgurl" alt="">
-                        <div class="right-series">
-                            <div class="title">
-                                {{item.licensingdate}}款  {{item.brandseries}}
-                            </div>
-                            <div class="sub-info">
-                                {{item.licensingdate}}上牌 ／
-                                {{item.kilometers}}公里 ／ {{item.city}}
-                            </div>
-                            <div class="car-price clearfix">
-                                <span class="sub-info color-time">{{item.createtime}}</span>
-                                <span class="fr bold base-color"> {{item.price}}万</span>
+                    <van-swipe-cell
+                        :key="item.id"
+                        :before-close="({ position, instance })=>beforeClose({ position, instance },item)"
+                    >
+                        <div class="car-item-li flex flex-between"
+                             @click="goCarDetail(item)"
+                        >
+                            <img :src="item.imgurl?item.imgurl.split(',')[0]:item.imgurl" alt="">
+                            <div class="right-series">
+                                <div class="title">
+                                    {{item.licensingdate}}款  {{item.brandseries}}
+                                </div>
+                                <div class="sub-info">
+                                    {{item.licensingdate}}上牌 ／
+                                    {{item.kilometers}}万公里 ／ {{item.city}}
+                                </div>
+                                <div class="car-price clearfix">
+                                    <span class="sub-info color-time">{{item.createtime}}</span>
+                                    <span class="fr bold base-color"> {{item.price}}万</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <template v-if="isCheckMy" #right>
+                            <van-button square text="删除" type="danger" class="delete-button" />
+                        </template>
+                    </van-swipe-cell>
                 </template>
             </van-list>
         </van-pull-refresh>
@@ -42,7 +50,11 @@ import {
     List,
     Cell,
     Icon,
-    Loading
+    Loading,
+    SwipeCell,
+    Button,
+    Dialog,
+    Toast
 } from 'vant';
 import Api from '@/api/index';
 export default {
@@ -51,7 +63,15 @@ export default {
         [List.name]: List,
         [Cell.name]: Cell,
         [Icon.name]: Icon,
-        [Loading.name]: Loading
+        [Loading.name]: Loading,
+        [SwipeCell.name]: SwipeCell,
+        [Button.name]: Button
+    },
+    props: {
+        isCheckMy: {
+            type: Boolean,
+            default: false
+        }
     },
     data(){
         return {
@@ -62,10 +82,33 @@ export default {
             list: [],
             curPage: 1,
             total: null,
-            datalist: []
+            datalist: [],
         };
     },
+
     methods: {
+        beforeClose({ position, instance }, item) {
+            console.log('instance', instance);
+            console.log('item', item);
+            switch (position) {
+                case 'left':
+                case 'cell':
+                case 'outside':
+                    instance.close();
+                    break;
+                case 'right':
+                    Dialog.confirm({
+                        message: '确定删除吗？',
+                    }).then(() => {
+                        Api.delCarItem({id: item.id}).then(() => {
+                            instance.close();
+                            Toast('删除成功');
+                            this.onRefresh();
+                        });
+                    });
+                    break;
+            }
+        },
         goCarDetail(item){
             this.$router.push(
                 {
@@ -124,6 +167,9 @@ export default {
 </script>
 <style lang="less">
     .car-list-page {
+        .delete-button {
+            height: 100%;
+        }
         .car-item-li {
             padding:20px;
             border-bottom: 1px solid #eee;

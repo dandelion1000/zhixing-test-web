@@ -4,6 +4,7 @@
             v-model="show"
             :overlay="false"
             :closeable="true"
+            @close="close"
             position="right"
             :style="{width:'100%', height: '100%', overflow: 'auto'}" >
             <van-sticky>
@@ -84,6 +85,10 @@ export default {
             this.show = true;
             // document.querySelector('body').classList.remove('van-overflow-hidden');
             // document.body.removeAttribute('style', 'overflow:hidden !important');
+        },
+        close(){
+            this.show = false;
+            this.$emit('on-close');
         },
         openSubSeries(index, items){
             if (index!==this.parentActive) {

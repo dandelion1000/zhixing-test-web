@@ -12,7 +12,7 @@
                     <div class="user-account flex flex-around">
                         <div class="every-item">
                             <div class="number">
-                                {{accountRest.money}}
+                                {{accountRest.money||0}}
                             </div>
                             <div class="text-intro">
                                 余额
@@ -23,7 +23,7 @@
                         </div>
                         <div class="every-item">
                             <div class="number">
-                                {{accountRest.integral}}
+                                {{accountRest.integral||0}}
                             </div>
                             <div class="text-intro">
                                 积分
@@ -86,10 +86,14 @@
                 <div class="padding-16 combo-box-shadow">
                     <div class="table-header-label">
                         <van-row>
-                            <van-col span="3">序号</van-col>
                             <van-col span="7">项目名称</van-col>
-                            <van-col span="7">数量</van-col>
-                            <van-col span="7">创建时间</van-col>
+                            <van-col span="4">数量</van-col>
+                            <van-col span="7" v-if="curTab==2">车牌号</van-col>
+                            <van-col span="6">
+                                <span v-if="curTab==1">创建</span>
+                                <span v-else>使用</span>
+                                时间
+                            </van-col>
                         </van-row>
                     </div>
                     <van-row
@@ -97,19 +101,17 @@
                         v-for="(item,index) in comboList"
                         :key="index"
                     >
-                        <van-col span="3">
-                            <span class="index-circle">
-                                {{index+1}}
-                            </span>
-                        </van-col>
                         <van-col span="7">
                             {{item.projectname}}
                         </van-col>
-                        <van-col span="7">
+                        <van-col span="4">
                             {{item.account}}
                         </van-col>
-                        <van-col span="7">
-                            {{item.createdate}}
+                        <van-col span="7" v-if="curTab==2">
+                            {{item.carno}}
+                        </van-col>
+                        <van-col span="6">
+                            {{item.updatetime}}
                         </van-col>
                     </van-row>
                     <van-loading
@@ -118,15 +120,19 @@
                         size="34px" />
 
                     <div class="view-more-data"  v-if="curTab==1 && !sloading">
-                        <span>没有更多了</span>
+                        <span v-if="!comboList.length">暂无数据</span>
+                        <span v-else>没有更多了</span>
                     </div>
                     <div class="view-more-data" v-if="curTab==2 && !sloading">
-                        <span
-                            @click="viewMore"
-                            v-if="comboList.length < total">
-                            查看更多  <van-icon name="arrow-down" />
+                        <span v-if="!comboList.length">暂无数据</span>
+                        <span v-else>
+                            <span
+                                @click="viewMore"
+                                v-if="comboList.length < total">
+                                查看更多  <van-icon name="arrow-down" />
+                            </span>
+                            <span  v-else>没有更多了</span>
                         </span>
-                        <span  v-else>没有更多了</span>
                     </div>
                 </div>
             </div>
@@ -144,7 +150,7 @@
 </template>
 <script>
 import {getUserCarInfo, deadlineWarn, getAccountRest, restCards, usedCards} from '@/api/user';
-import {Sticky, Popup, Picker, Icon, Col, Row, Loading} from 'vant';
+import {Sticky, Toast, Popup, Picker, Icon, Col, Row, Loading} from 'vant';
 export default {
     components: {
         [Sticky.name]: Sticky,
@@ -164,7 +170,7 @@ export default {
         return {
             total: 0,
             page: 1,
-            rows: 3,
+            rows: 10,
             curTab: 1,
             accountRest: {
                 money: '0',
@@ -179,7 +185,7 @@ export default {
             companyList: [],
             warnInfo: {},
             curCarIndex: 0,
-            sloading: true
+            sloading: false
         };
     },
     mounted() {
@@ -187,11 +193,16 @@ export default {
     },
     methods: {
         getUserCarInfo(){
-            let userPhone = localStorage.getItem('usermobile');
+            let userPhone = JSON.parse(localStorage.getItem('usermobile'));
+            Toast.loading({
+                message: '加载中...',
+                overlay: true,
+                forbidClick: true,
+                loadingType: 'spinner',
+            });
             getUserCarInfo({
                 phone: userPhone //15255550012
             }).then((res) => {
-                console.log(res);
                 this.companyList = res;
                 this.columns = Array.isArray(res)
                     ? res.map((item) => {
@@ -213,6 +224,7 @@ export default {
                 carid: id
             }).then((res) => {
                 console.log('warnInfo', res);
+                Toast.clear();
                 this.warnInfo = res;
             });
         },
@@ -221,12 +233,17 @@ export default {
             getAccountRest({id: id}).then((res) => {
                 console.log('rest', res);
                 this.accountRest = res;
+                Toast.clear();
             });
         },
         getRestCards(){
+            let id = this.companyList[this.curCarIndex].clientid;
+            if (!id) {
+                return;
+            }
             this.sloading = true;
             restCards({
-                clientid: this.companyList[this.curCarIndex].clientid
+                clientid: id
             }).then((res) => {
                 console.log('getRestCards', res);
                 this.sloading = false;
@@ -234,16 +251,22 @@ export default {
             });
         },
         getusedCards(){
+            let id = this.companyList[this.curCarIndex].clientid;
+            if (!id) {
+                return;
+            }
             this.sloading = true;
             usedCards({
                 page: this.page,
                 rows: this.rows,
-                clientid: this.companyList[this.curCarIndex].clientid
+                clientid: id
             }).then((res) => {
                 console.log('getusedCards', res);
                 this.sloading = false;
                 this.total =res.total;
-                this.comboList = res.rows;
+                this.comboList = this.comboList.concat(res.rows);
+            }).catch(() => {
+                this.sloading = false;
             });
         },
         onConfirm(value, index) {
@@ -251,13 +274,16 @@ export default {
             this.whichCompany = value;
             this.curCarIndex = index;
             this.getDeadlineWarn();
+            this.getAccountRest();
+            this.curTab===1 ? this.getRestCards() : this.getusedCards();
             this.show = false;
         },
         tabChange(index){
+            if(this.curTab === index){
+                return;
+            }
             this.curTab = index;
-            console.log(index);
             this.comboList = [];
-            this.sloading = true;
             index===1 ? this.getRestCards() : this.getusedCards()
             ;
         },
@@ -268,7 +294,9 @@ export default {
 
         },
         viewMore(){
-            this.comboList = this.comboList.concat(this.comboList);
+            this.page++;
+            this.getusedCards();
+            // this.comboList = this.comboList.concat(this.comboList);
         },
         openSelectCompany(){
             if (this.columns.length===1) {

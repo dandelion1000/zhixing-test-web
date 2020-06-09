@@ -12,22 +12,23 @@
                 </div>
             </van-sticky>
             <div class="condtion-select fix-scroll-list">
-                <van-checkbox-group v-model="result">
-                    <van-cell-group>
-                        <van-cell
-                            v-for="(item, index) in list"
-                            clickable
-                            :key="item"
-                            :title="`${item}`"
-                            @click="toggle(index)"
-                        >
-                            <template #right-icon>
-                                <van-checkbox shape="square" :name="item" ref="checkboxes" />
-                            </template>
-                        </van-cell>
-                    </van-cell-group>
-                </van-checkbox-group>
-                <div class="mark-title-header">
+                <van-cell-group>
+                    <van-cell
+                        v-for="(item, index) in list"
+                        clickable
+                        :key="index"
+                        :title="`${item.title}`"
+                    >
+                        <template #right-icon>
+                            <van-radio-group v-model="item.radio" direction="horizontal">
+                                <van-radio name="有">有</van-radio>
+                                <van-radio name="无">无</van-radio>
+                            </van-radio-group>
+                            <!-- <van-checkbox shape="square" :name="item" ref="checkboxes" /> -->
+                        </template>
+                    </van-cell>
+                </van-cell-group>
+                <!-- <div class="mark-title-header">
                     备注：
                 </div>
                 <van-field
@@ -39,7 +40,7 @@
                     type="textarea"
                     placeholder="请输入其他车况"
                     show-word-limit
-                />
+                /> -->
                 <div class="isOk flex flex-between">
                     <van-button
                         class="flex1"
@@ -92,7 +93,23 @@ export default {
     },
     data(){
         return {
-            list: ['火烧', '泡水', '重大事故', '换件', '补漆'],
+            list: [{
+                title: '火烧',
+                radio: '无'
+            }, {
+                title: '泡水',
+                radio: '无'
+            }, {
+                title: '重大事故',
+                radio: '无'
+            }, {
+                title: '换件',
+                radio: '无'
+            },
+            {
+                title: '补漆',
+                radio: '无'
+            }],
             // radio: '',
             mark: '',
             result: [],
@@ -102,14 +119,17 @@ export default {
     mounted() {
     },
     methods: {
-        toggle(index) {
-            this.$refs.checkboxes[index].toggle();
-        },
+        // toggle(index) {
+        //     this.$refs.checkboxes[index].toggle();
+        // },
         open(){
             this.show = true;
         },
         saveCondtion(){
-            let value = this.result.join(',') +'  '+this.mark;
+            console.log('this.list', this.list);
+            let value = this.list.map((item) => {
+                return item.radio +item.title;
+            }).join(',');
             console.log(value);
             this.show = false;
             this.$emit('input', value);
@@ -128,7 +148,7 @@ export default {
             padding-left: 20px;
         }
         .isOk {
-            padding: 20px 30px 30px;
+            padding: 50px 30px 30px;
             // width: 100%;
             // position: fixed;
             // bottom: 0px;

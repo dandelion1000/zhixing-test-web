@@ -19,7 +19,7 @@
             </div>
             <div class="every-sub-item-info">
                 <label>表显里程  </label>
-                <span>{{detailInfo.kilometers}}公里</span>
+                <span>{{detailInfo.kilometers}}万公里</span>
             </div>
             <div class="every-sub-item-info">
                 <label>上牌时间  </label>
@@ -128,7 +128,7 @@ export default {
         img{
             display: inline-block;
             width: 375px;
-            height: 170px;
+            // height: 170px;
         }
     }
 }
